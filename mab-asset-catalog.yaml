@@ -1,0 +1,606 @@
+# ============================================================================
+# MICHAEL ANDREWS BESPOKE - VIRTUAL ATELIER
+# Complete Asset Catalog & Application Reference
+# ============================================================================
+
+application:
+  name: "Michael Andrews Bespoke Virtual Atelier"
+  description: "AI-powered virtual try-on and bespoke suit visualization platform"
+  version: "1.0.0"
+  deployment_url: "https://mabsuit-479703.web.app"
+  firebase_project: "mabsuit-479703"
+  
+  features:
+    - "Photo-based sizing and AI validation"
+    - "Real-time suit visualization with Gemini AI"
+    - "User profile management with Firebase Auth"
+    - "Cloud storage for AI-generated designs"
+    - "Persistent wardrobe gallery"
+    - "Guest and authenticated user modes"
+  
+  workflow:
+    - step: "Hero Landing"
+      description: "User arrives at premium landing page"
+    - step: "Photo Capture"
+      description: "User uploads or captures full-body photo"
+    - step: "AI Validation"
+      description: "Gemini validates photo quality (lighting, pose, background)"
+    - step: "Measurement Input"
+      description: "User enters master measurements"
+    - step: "Garment Selection"
+      description: "Choose shirt, suit, or full outfit"
+    - step: "Customization"
+      description: "Select fabric, style, and details"
+    - step: "AI Processing"
+      description: "Gemini generates try-on visualization"
+    - step: "Result & Save"
+      description: "View result, save to wardrobe, download portfolio"
+
+# ============================================================================
+# BRAND ASSETS
+# ============================================================================
+
+brand_assets:
+  logo_primary:
+    url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/michael-andrews-logo.png"
+    usage: "Header, hero section, watermarks"
+  
+  logo_footer:
+    url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/michael-andrews-footer-logo.png"
+    usage: "Footer, secondary branding"
+  
+  ai_training_guide:
+    url: "https://storage.googleapis.com/mabbucket/MABSUITapp/MICHAEL%20ANDREWS%20BESPOKE%20-%20AI%20TRAINING%20GUIDE.md"
+    description: "Comprehensive AI training reference for measurements, proportions, and construction"
+  
+  product_catalog:
+    url: "https://storage.googleapis.com/mabbucket/MABSUITapp/MAB%20-%20Sheet1.csv"
+    description: "Master product database (CSV format)"
+
+# ============================================================================
+# BESPOKE SUIT CATALOG (31 Products)
+# ============================================================================
+
+suits:
+  - id: "charcoal-grey-db-pinstripe"
+    name: "Charcoal Grey Double Breasted Pinstripe Suit"
+    category: "Greys"
+    price: "$3,595"
+    production_time: "10-12 weeks"
+    production_type: "Bespoke"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/Michael-Andrews-Custom-Grey-Suit-410x470.png"
+    product_url: "https://www.michaelandrews.com/product/grey-and-off-white-striped-suit/"
+  
+  - id: "medium-brown-donegal-tweed"
+    name: "Medium Brown Donegal Tweed Suit"
+    category: "Browns"
+    price: "$3,295"
+    production_time: "10-12 weeks"
+    production_type: "Bespoke"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/Michael-Andrews-Custom-Brown-Donegal-Tweed-Suit-Main-410x470.png"
+    product_url: "https://www.michaelandrews.com/product/medium-brown-donegal-tweed-suit/"
+  
+  - id: "black-solid-twill"
+    name: "Black Solid Twill Bespoke Suit"
+    category: "Specialty"
+    price: "$3,495"
+    production_time: "10-12 weeks"
+    production_type: "Bespoke"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/00002_02386_main_black-two-button-super-110s-bespoke-suit-410x470.png"
+    product_url: "https://www.michaelandrews.com/product/black-two-button-super-110s-bespoke-suit/"
+  
+  - id: "steel-grey-flannel"
+    name: "Steel Grey Flannel Bespoke Suit"
+    category: "Greys"
+    price: "$4,295"
+    production_time: "10-12 weeks"
+    production_type: "Bespoke"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/00103_02383_main_steel-grey-flannel-classic-bespoke-suit-410x470.png"
+    product_url: "https://www.michaelandrews.com/product/steel-grey-flannel-classic-bespoke-suit/"
+  
+  - id: "grey-sharkskin"
+    name: "Grey Sharkskin Bespoke Suit"
+    category: "Greys"
+    price: "$3,995"
+    production_time: "10-12 weeks"
+    production_type: "Bespoke"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/00004_02395_main_medium-grey-pick-pick-classic-bespoke-suit-410x470.png"
+    product_url: "https://www.michaelandrews.com/product/medium-grey-pick-pick-classic-bespoke-suit/"
+  
+  - id: "rust-brown-corduroy"
+    name: "Rust Brown Cotton/Wool Stretch Corduroy Suit"
+    category: "Browns"
+    price: "$4,095"
+    production_time: "10-12 weeks"
+    production_type: "Bespoke"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/MAB-Rust-Corduroy-Suit-410x470.png"
+    product_url: "https://www.michaelandrews.com/product/rust-cotton-wool-stretch-corduroy-suit/"
+  
+  - id: "dark-navy-super-110s"
+    name: "Dark Navy Blue Super 110's Bespoke Suit"
+    category: "Navy Blues"
+    price: "$3,495"
+    production_time: "10-12 weeks"
+    production_type: "Bespoke"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/00008_02404_main_dark-navy-blue-super-110s-two-button-bespoke-suit-410x470.png"
+    product_url: "https://www.michaelandrews.com/product/dark-navy-blue-super-110s-two-button-bespoke-suit/"
+  
+  - id: "navy-blue-solid"
+    name: "Navy Blue Solid Bespoke Suit"
+    category: "Navy Blues"
+    price: "$3,495"
+    production_time: "10-12 weeks"
+    production_type: "Bespoke"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/00111_02402_main_navy-blue-solid-super-110s-two-button-bespoke-suit-410x470.png"
+    product_url: "https://www.michaelandrews.com/product/navy-blue-solid-super-110s-two-button-bespoke-suit/"
+  
+  - id: "cream-plain-weave"
+    name: "Cream Plain Weave Bespoke Suit"
+    category: "Specialty"
+    price: "$3,895"
+    production_time: "10-12 weeks"
+    production_type: "Bespoke"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/00781_01969_main_cream-plain-weave-bespoke-suit-410x470.png"
+    product_url: "https://www.michaelandrews.com/product/cream-plain-weave-bespoke-suit/"
+  
+  - id: "navy-blue-signature"
+    name: "Navy Blue Signature Two-button Bespoke Suit"
+    category: "Navy Blues"
+    price: "$3,995"
+    production_time: "10-12 weeks"
+    production_type: "Bespoke"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/00013_02407_main_navy-blue-signature-two-button-bespoke-suit-410x470.png"
+    product_url: "https://www.michaelandrews.com/product/navy-blue-signature-two-button-bespoke-suit/"
+  
+  - id: "charcoal-gun-check"
+    name: "Charcoal Gun Check Signature Bespoke Suit"
+    category: "Greys"
+    price: "$3,595"
+    production_time: "10-12 weeks"
+    production_type: "Bespoke"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/00052_02401_main_charcoal-gun-check-signature-bespoke-suit-410x470.png"
+    product_url: "https://www.michaelandrews.com/product/charcoal-gun-check-signature-bespoke-suit/"
+  
+  - id: "dark-brown-linen"
+    name: "Dark Brown Linen Bespoke Suit"
+    category: "Browns"
+    price: "$4,495"
+    production_time: "10-12 weeks"
+    production_type: "Bespoke"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/00775_01954_main_dark-brown-linen-bespoke-suit-410x470.png"
+    product_url: "https://www.michaelandrews.com/product/dark-brown-linen-bespoke-suit/"
+  
+  - id: "khaki-cotton"
+    name: "Khaki Cotton Bespoke Suit"
+    category: "Browns"
+    price: "$3,195"
+    production_time: "10-12 weeks"
+    production_type: "Bespoke"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/00768_02379_main_khaki-cotton-bespoke-suit-410x470.png"
+    product_url: "https://www.michaelandrews.com/product/khaki-cotton-bespoke-suit/"
+  
+  - id: "light-grey-sharkskin"
+    name: "Light Grey Sharkskin Bespoke Suit"
+    category: "Greys"
+    price: "$3,895"
+    production_time: "10-12 weeks"
+    production_type: "Bespoke"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/00769_02375_main_bespoke-light-grey-sharkskin-bespoke-suit-410x470.png"
+    product_url: "https://www.michaelandrews.com/product/bespoke-light-grey-sharkskin-bespoke-suit/"
+  
+  - id: "mid-grey-sharkskin"
+    name: "Mid-Grey Sharkskin Bespoke Suit"
+    category: "Greys"
+    price: "$3,995"
+    production_time: "10-12 weeks"
+    production_type: "Bespoke"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/00022_02405_main_medium-grey-pick-pick-signature-bespoke-suit-410x470.png"
+    product_url: "https://www.michaelandrews.com/product/medium-grey-pick-pick-signature-bespoke-suit/"
+  
+  - id: "hunter-green-seersucker"
+    name: "Hunter Green Wool Seersucker Suit"
+    category: "Specialty"
+    price: "$3,795"
+    production_time: "10-12 weeks"
+    production_type: "Bespoke"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/Michael-Andrews-Green-Suit-Large-Square-410x470.jpg"
+    product_url: "https://www.michaelandrews.com/product/green-seersucker-suit/"
+  
+  - id: "navy-herringbone"
+    name: "Navy Herringbone Classic Bespoke Suit"
+    category: "Navy Blues"
+    price: "$3,495"
+    production_time: "10-12 weeks"
+    production_type: "Bespoke"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/00131_02408_main_navy-herringbone-classic-bespoke-suit-410x470.png"
+    product_url: "https://www.michaelandrews.com/product/navy-herringbone-classic-bespoke-suit/"
+  
+  - id: "medium-blue-wool-linen-mtm"
+    name: "Medium Blue Wool-Linen MTM Suit"
+    category: "Made-to-Measure"
+    price: "$1,595"
+    production_time: "6-8 weeks"
+    production_type: "Made-to-Measure"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/01426_02821_main_medium-blue-two-button-wool-linen-blend-mtm-suit-410x470.png"
+    product_url: "https://www.michaelandrews.com/product/medium-blue-two-button-wool-linen-blend-mtm-suit/"
+  
+  - id: "royal-blue-150s"
+    name: "Royal Blue 150's Bespoke Suit"
+    category: "Royal Blues"
+    price: "$4,495"
+    production_time: "10-12 weeks"
+    production_type: "Bespoke"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/00110_02406_main_royal-blue-super-150s-two-button-bespoke-suit-410x470.png"
+    product_url: "https://www.michaelandrews.com/product/royal-blue-super-150s-two-button-bespoke-suit/"
+  
+  - id: "royal-blue-mtm"
+    name: "Royal Blue MTM Suit"
+    category: "Made-to-Measure"
+    price: "$1,695"
+    production_time: "6-8 weeks"
+    production_type: "Made-to-Measure"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/01398_02848_main_royal-blue-two-button-wool-mtm-suit-410x470.png"
+    product_url: "https://www.michaelandrews.com/product/royal-blue-two-button-wool-mtm-suit/"
+  
+  - id: "grey-sharkskin-mtm"
+    name: "Grey Sharkskin MTM Suit"
+    category: "Made-to-Measure"
+    price: "$1,495"
+    production_time: "6-8 weeks"
+    production_type: "Made-to-Measure"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/01407_02841_main_medium-grey-sharkskin-two-button-wool-mtm-suit-410x470.png"
+    product_url: "https://www.michaelandrews.com/product/medium-grey-sharkskin-two-button-wool-mtm-suit/"
+  
+  - id: "navy-blue-twill-mtm"
+    name: "Navy Blue Twill MTM Suit"
+    category: "Made-to-Measure"
+    price: "$1,695"
+    production_time: "6-8 weeks"
+    production_type: "Made-to-Measure"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/Navy-Blue-Twill-Two-Button-Wool-MTM-Suit-410x470.png"
+    product_url: "https://www.michaelandrews.com/product/navy-blue-twill-two-button-wool-mtm-suit/"
+  
+  - id: "charcoal-twill-classic"
+    name: "Charcoal Twill Classic Bespoke Suit"
+    category: "Greys"
+    price: "$4,495"
+    production_time: "10-12 weeks"
+    production_type: "Bespoke"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/00009_02392_main_charcoal-twill-classic-bespoke-suit-410x470.png"
+    product_url: "https://www.michaelandrews.com/product/charcoal-twill-classic-bespoke-suit/"
+  
+  - id: "aubergine-twill"
+    name: "Aubergine Twill Signature Bespoke Suit"
+    category: "Specialty"
+    price: "$4,295"
+    production_time: "10-12 weeks"
+    production_type: "Bespoke"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/00017_02391_main_bordeaux-twill-signature-bespoke-suit-410x470.png"
+    product_url: "https://www.michaelandrews.com/product/bordeaux-twill-signature-bespoke-suit/"
+  
+  - id: "charcoal-birdseye"
+    name: "Charcoal Birdseye Classic Bespoke Suit"
+    category: "Greys"
+    price: "$4,095"
+    production_time: "10-12 weeks"
+    production_type: "Bespoke"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/00079_00929_main_charcoal-birdseye-classic-bespoke-suit-410x470.png"
+    product_url: "https://www.michaelandrews.com/product/charcoal-birdseye-classic-bespoke-suit/"
+  
+  - id: "marine-birdseye"
+    name: "Marine Birdseye Classic Bespoke Suit"
+    category: "Navy Blues"
+    price: "$4,095"
+    production_time: "10-12 weeks"
+    production_type: "Bespoke"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/00080_02398_main_marine-birdseye-classic-bespoke-suit-410x470.png"
+    product_url: "https://www.michaelandrews.com/product/marine-birdseye-classic-bespoke-suit/"
+  
+  - id: "light-grey-pinstripe"
+    name: "Light Grey Pinstripe Bespoke Suit"
+    category: "Greys"
+    price: "$4,095"
+    production_time: "10-12 weeks"
+    production_type: "Bespoke"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/00776_02377_light-grey-pinstripe-bespoke-suit-410x470.png"
+    product_url: "https://www.michaelandrews.com/product/light-grey-pinstripe-bespoke-suit/"
+  
+  - id: "grey-glen-plaid-windowpane"
+    name: "Grey Glen Plaid Windowpane Bespoke Suit"
+    category: "Greys"
+    price: "$4,195"
+    production_time: "10-12 weeks"
+    production_type: "Bespoke"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/00005_02390_main_grey-glen-plaid-windowpane-classic-bespoke-suit-410x470.png"
+    product_url: "https://www.michaelandrews.com/product/grey-glen-plaid-windowpane-classic-bespoke-suit/"
+  
+  - id: "denim-blue-chalk-stripe"
+    name: "Denim Blue Chalk Stripe Suit with Silk Knots"
+    category: "Royal Blues"
+    price: "$3,995"
+    production_time: "10-12 weeks"
+    production_type: "Bespoke"
+    image_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/suits/Michael-Andrews-Blue-Pinstripe-Suit-Large-Square-2-410x470.jpg"
+    product_url: "https://www.michaelandrews.com/product/denim-blue-chalk-stripe-suit-with-silk-knots/"
+
+# ============================================================================
+# FABRIC IMAGES (High-Resolution Textures - 44 files)
+# ============================================================================
+
+fabric_images:
+  base_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/fabric_images/"
+  description: "High-resolution fabric textures for AI training and detail views"
+  count: 44
+  
+  files:
+    - "AL-FL43183-1.png"
+    - "FABRIC_21d2503a.jpg"
+    - "FABRIC_21d2503a_1.jpg"
+    - "FABRIC_2bb12f6b.jpg"
+    - "FABRIC_2bb12f6b_1.jpg"
+    - "FABRIC_40c30bbc.jpg"
+    - "FABRIC_432f8602.jpg"
+    - "FABRIC_432f8602_1.jpg"
+    - "FABRIC_44ab7060.jpg"
+    - "FABRIC_44ab7060_1.jpg"
+    - "FABRIC_50ef3078.jpg"
+    - "FABRIC_50ef3078_1.jpg"
+    - "FABRIC_686c5519.jpg"
+    - "FABRIC_686c5519_1.jpg"
+    - "FABRIC_6aacc5e4.jpg"
+    - "FABRIC_6aacc5e4_1.jpg"
+    - "FABRIC_7144b1c9.jpg"
+    - "FABRIC_7144b1c9_1.jpg"
+    - "FABRIC_78523f07.jpg"
+    - "FABRIC_78523f07_1.jpg"
+    - "FABRIC_7d1708b8.jpg"
+    - "FABRIC_7d1708b8_1.jpg"
+    - "FABRIC_92ebb862.jpg"
+    - "FABRIC_92ebb862_1.jpg"
+    - "FABRIC_976768e3.jpg"
+    - "FABRIC_976768e3_1.jpg"
+    - "FABRIC_97fa504f.jpg"
+    - "FABRIC_997e2eb9.jpg"
+    - "FABRIC_997e2eb9_1.jpg"
+    - "FABRIC_9aec7688.jpg"
+    - "FABRIC_9aec7688_1.jpg"
+    - "FABRIC_c2ff1cc9.jpg"
+    - "FABRIC_c2ff1cc9_1.jpg"
+    - "FABRIC_d0058d01.jpg"
+    - "FABRIC_d0058d01_1.jpg"
+    - "FABRIC_e477d8df.jpg"
+    - "FABRIC_e477d8df_1.jpg"
+    - "FABRIC_f02a87eb.jpg"
+    - "FABRIC_f02a87eb_1.jpg"
+    - "FABRIC_fccd9b82.jpg"
+    - "FABRIC_fccd9b82_1.jpg"
+    - "FABRIC_fd905ff9.jpg"
+    - "FABRIC_fd905ff9_1.jpg"
+    - "UNKNOWN.jpg"
+
+# ============================================================================
+# FABRIC SWATCHES (Thumbnails - 112 files)
+# ============================================================================
+
+fabric_swatches:
+  base_url: "https://storage.googleapis.com/mabbucket/MABSUITapp/fabric_swatches/"
+  description: "Mill reference swatches for fabric selection UI"
+  count: 112
+  
+  mills:
+    holland_sherry:
+      prefix: "ESHS"
+      count: 30
+      samples:
+        - "ESHS-9819600H.jpg"
+        - "ESHS-983503H.jpg"
+        - "ESHS-986001H.jpg"
+        - "ESHS-986002H.jpg"
+        - "ESHS-986006H.jpg"
+        - "ESHS-986007H.jpg"
+        - "ESHS-986008H.jpg"
+        - "ESHS-986009H.jpg"
+        - "ESHS-986010H.jpg"
+        - "ESHS-986011H.jpg"
+        - "ESHS-986018H.jpg"
+        - "ESHS-986024H.jpg"
+        - "ESHS-986025H.jpg"
+        - "ESHS-986026H.jpg"
+        - "ESHS-986027H.jpg"
+        - "ESHS-986028H.jpg"
+        - "ESHS-986031H.jpg"
+        - "ESHS-986032H.jpg"
+        - "ESHS-986036H.jpg"
+        - "ESHS-986500H.jpg"
+        - "ESHS-986501H.jpg"
+        - "ESHS-986502H.jpg"
+        - "ESHS-986503H.jpg"
+        - "ESHS-986504H.jpg"
+        - "ESHS-986505H.jpg"
+        - "ESHS-986506H.jpg"
+        - "ESHS-986508H.jpg"
+    
+    scabal:
+      prefix: "SSCA"
+      count: 24
+      samples:
+        - "SSCA-852442Scaba.jpg"
+        - "SSCA-852443Scaba.jpg"
+        - "SSCA-852446Scaba.jpg"
+        - "SSCA-852455Scaba.jpg"
+        - "SSCA-852457Scaba.jpg"
+        - "SSCA-852462Scaba.jpg"
+        - "SSCA-852466Scaba.jpg"
+        - "SSCA-852467Scaba.jpg"
+        - "SSCA-852468Scaba.jpg"
+        - "SSCA-852474Scaba.jpg"
+        - "SSCA-852482Scaba.jpg"
+        - "SSCA-852781Scaba.jpg"
+        - "SSCA-852782Scaba.jpg"
+        - "SSCA-852783Scaba.jpg"
+        - "SSCA-852784Scaba.jpg"
+        - "SSCA-852785Scaba.jpg"
+        - "SSCA-852786Scaba.jpg"
+        - "SSCA-852787Scaba.jpg"
+        - "SSCA-852791Scaba.jpg"
+        - "SSCA-852793Scaba.jpg"
+        - "SSCA-852794Scaba.jpg"
+        - "SSCA-852795Scaba.jpg"
+        - "SSCA-852806Scaba.jpg"
+    
+    dormeuil:
+      prefix: "ESDM"
+      count: 14
+      samples:
+        - "ESDM-140005D.jpg"
+        - "ESDM-140006D.jpg"
+        - "ESDM-300001D.jpg"
+        - "ESDM-300002D.jpg"
+        - "ESDM-300009D.jpg"
+        - "ESDM-300094D.jpg"
+        - "ESDM-301486D.jpg"
+        - "ESDM-470202D.jpg"
+        - "ESDM-571784D.jpg"
+        - "ESDM-572997D.jpg"
+        - "ESDM-796002D.jpg"
+        - "ESDM-796003D.jpg"
+        - "ESDM-994120D.jpg"
+    
+    loro_piana:
+      prefix: "ESLP"
+      count: 3
+      samples:
+        - "ESLP-N734011L.jpg"
+        - "ESLP-N775024L.jpg"
+        - "ESLP-N775041L.jpg"
+    
+    other_mills:
+      samples:
+        - "ESAT-2255.jpg"
+        - "ESLM-853L.jpg"
+        - "ESLW-3502.jpg"
+        - "ESLW-6020.jpg"
+        - "ESMB-21534W.jpg"
+        - "ESMB-21567W.jpg"
+        - "ESMB-21580W.jpg"
+        - "ESMB-21581W.jpg"
+        - "ESMB-21582W.jpg"
+        - "ESMB-21583W.jpg"
+        - "ESMB-34641W.jpg"
+        - "ESSD-17025E.jpg"
+        - "ESSD-17026E.jpg"
+        - "ESSD-18015S.jpg"
+        - "ESSD-18018S.jpg"
+        - "ESSD-18022S.jpg"
+        - "ESSD-21013S.jpg"
+        - "ESSD-21018S.jpg"
+        - "ESSD-21024S.jpg"
+        - "ESSD-21027S.jpg"
+        - "ESSD-28015S.jpg"
+        - "ESSD-28016S.jpg"
+        - "ESSD-28017S.jpg"
+        - "ESSD-28020S.jpg"
+        - "ESSD-28040S.jpg"
+        - "ESTD-F7291T.jpg"
+        - "ESTD-F7413M.jpg"
+        - "ESTR-TRA004F.jpg"
+        - "HSWC-11556.jpg"
+        - "HSWC-61275.jpg"
+        - "HSWC-61298.jpg"
+        - "HSWC-62349.jpg"
+        - "SBAC-KUSHKA.jpg"
+        - "SBAC-MARIKA.jpg"
+        - "SBAC-NIKEL.jpg"
+        - "SBMC-BK301_BE439.jpg"
+        - "SBMC-CW001.jpg"
+        - "SBMC-NY322_BE439.jpg"
+        - "SCYC-CYC.jpg"
+        - "SHFW-0222H.jpg"
+        - "SHFW-2003J.jpg"
+        - "SHFW-2016J.jpg"
+        - "SHFW-2021J.jpg"
+        - "SHFW-904889H.jpg"
+        - "SMAB-T.jpg"
+        - "STAC-O.jpg"
+
+# ============================================================================
+# DEVELOPMENT & DEPLOYMENT
+# ============================================================================
+
+development:
+  tech_stack:
+    frontend: "React 19.2.0 + Vite 6.2.0"
+    styling: "Tailwind CSS 4.1.18"
+    language: "TypeScript 5.8.2"
+    ai_integration: "@google/generative-ai 1.30.0"
+    backend: "Firebase 12.7.0"
+  
+  firebase_services:
+    - "Authentication (Google SSO + Anonymous)"
+    - "Firestore (User profiles, designs)"
+    - "Storage (AI-generated images)"
+    - "Hosting (Static site deployment)"
+    - "Analytics (User tracking)"
+  
+  environment_variables:
+    - name: "VITE_FIREBASE_API_KEY"
+      description: "Firebase Web API Key"
+      required: true
+    - name: "VITE_GEMINI_API_KEY"
+      description: "Google Gemini AI API Key"
+      required: true
+  
+  build_commands:
+    install: "npm install"
+    dev: "npm run dev"
+    build: "npm run build"
+    deploy: "firebase deploy --only hosting"
+  
+  project_structure:
+    - "components/ - React UI components"
+    - "services/ - Firebase & Gemini integration"
+    - "constants/ - Product catalog & fabric data"
+    - "types.ts - TypeScript interfaces"
+    - "index.css - Tailwind configuration"
+
+# ============================================================================
+# USAGE INSTRUCTIONS
+# ============================================================================
+
+instructions:
+  setup:
+    - "Clone repository to local machine"
+    - "Run 'npm install' to install dependencies"
+    - "Create .env.local file with required API keys"
+    - "Run 'npm run dev' to start development server"
+  
+  deployment:
+    - "Ensure Firebase CLI is installed and authenticated"
+    - "Run 'npm run build' to create production bundle"
+    - "Run 'firebase deploy --only hosting' to deploy"
+    - "Verify deployment at https://mabsuit-479703.web.app"
+  
+  asset_management:
+    - "All suit images are hosted on Google Cloud Storage"
+    - "Update constants.ts to modify suit catalog"
+    - "Fabric swatches can be dynamically loaded from bucket"
+    - "AI training guide provides measurement specifications"
+  
+  ai_integration:
+    - "Photo validation uses Gemini 1.5 Flash model"
+    - "Try-on generation currently uses pass-through (mock)"
+    - "For production AI generation, integrate Imagen or DALL-E"
+    - "All prompts include detailed fabric and fit specifications"
+
+# ============================================================================
+# NOTES
+# ============================================================================
+
+notes:
+  - "Application uses Firebase Auth for user management"
+  - "Guest users can access all features without sign-up"
+  - "All AI-generated designs are saved to user's cloud profile"
+  - "Suit images are 410x470px optimized for web display"
+  - "Fabric swatches organized by mill for easy categorization"
+  - "Production timeline: Bespoke (10-12 weeks), MTM (6-8 weeks)"
+  - "Price range: $1,495 (MTM) to $4,495 (Premium Bespoke)"
