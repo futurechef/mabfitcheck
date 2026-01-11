@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import HowItWorksModal from './HowItWorksModal';
+import { DemoWalkthrough } from './DemoWalkthrough';
 
 interface HeroProps {
     onStart: () => void;
@@ -7,10 +8,12 @@ interface HeroProps {
 
 export const Hero: React.FC<HeroProps> = ({ onStart }) => {
     const [showTechModal, setShowTechModal] = useState(false);
+    const [showDemoWalkthrough, setShowDemoWalkthrough] = useState(false);
 
     return (
         <div className="flex flex-col items-center justify-center flex-grow p-6 text-center bg-[#F9F7F4] relative overflow-hidden">
             <HowItWorksModal isOpen={showTechModal} onClose={() => setShowTechModal(false)} />
+            {showDemoWalkthrough && <DemoWalkthrough onClose={() => setShowDemoWalkthrough(false)} />}
 
             {/* Decorative background element - Refined for brand */}
             <div className="absolute inset-0 opacity-5 pointer-events-none grayscale">
@@ -45,12 +48,20 @@ export const Hero: React.FC<HeroProps> = ({ onStart }) => {
                         Begin New Fitting
                     </button>
 
-                    <button
-                        onClick={() => setShowTechModal(true)}
-                        className="text-[#9A8A55] text-[10px] uppercase tracking-[0.2em] font-bold border-b border-transparent hover:border-[#9A8A55] transition-all pb-1"
-                    >
-                        View Technical Workflow
-                    </button>
+                    <div className="flex gap-4">
+                        <button
+                            onClick={() => setShowDemoWalkthrough(true)}
+                            className="bg-white border border-[#B8A66F] text-[#B8A66F] px-8 py-3 text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-[#FDFBF2] transition-all"
+                        >
+                            ⚡ Quick Demo Walkthrough
+                        </button>
+                        <button
+                            onClick={() => setShowTechModal(true)}
+                            className="text-[#9A8A55] text-[10px] uppercase tracking-[0.2em] font-bold border-b border-transparent hover:border-[#9A8A55] transition-all pb-1"
+                        >
+                            View Technical Workflow
+                        </button>
+                    </div>
                 </div>
 
                 <div className="pt-16">
