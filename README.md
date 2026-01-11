@@ -56,6 +56,25 @@ Visit `http://localhost:5173` to see the app.
 
 ---
 
+## ⚡ Quick Demo Walkthrough
+
+The app includes a **Demo Walkthrough** mode that uses full Cloud Storage URLs for all assets. This mode:
+
+- **No Backend Setup** - Works without Firebase or Gemini API
+- **Full URLs** - All images load directly from `storage.googleapis.com/mabbucket`
+- **Instant Loading** - Fast access via CDN
+- **Perfect for Demos** - Showcase the app without backend configuration
+
+To access: Click the **"⚡ Quick Demo Walkthrough"** button on the home screen.
+
+The demo walkthrough includes:
+- Browse all 29 suits with full Cloud Storage URLs
+- Explore 112 fabric swatches organized by mill
+- Preview result visualization examples
+- Interactive navigation between sections
+
+---
+
 ## 📦 Project Structure
 
 ```
