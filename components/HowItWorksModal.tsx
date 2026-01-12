@@ -17,7 +17,7 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ isOpen, onClose }) =>
     {
       title: "1. Identity Anchoring",
       icon: <CameraIcon className="w-6 h-6 text-[#1A2D4D]" />,
-      description: "When you upload a photo, our system uses Gemini 2.5 Flash to extract your unique physiological features. It creates a 'Digital Twin'—a clean studio model that preserves your likeness, body type, and hair while normalizing the background for consistent styling."
+      description: "When you upload a photo, our system uses Gemini 3 Pro to extract your unique physiological features. It creates a 'Digital Twin'—a clean studio model that preserves your likeness, body type, and hair while normalizing the background for consistent styling."
     },
     {
       title: "2. Multimodal Fusion",

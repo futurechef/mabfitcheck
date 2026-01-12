@@ -13,14 +13,16 @@ import Spinner from './Spinner';
 import { getFriendlyErrorMessage } from '../lib/utils';
 
 // Global types for AI Studio environment
-declare global {
-  interface AIStudio {
-    hasSelectedApiKey: () => Promise<boolean>;
-    openSelectKey: () => Promise<void>;
-  }
+// Moved out of declare global to reduce potential conflicts with pre-existing global definitions
+interface AIStudio {
+  hasSelectedApiKey: () => Promise<boolean>;
+  openSelectKey: () => Promise<void>;
+}
 
+declare global {
   interface Window {
-    readonly aistudio: AIStudio;
+    // Fixed: Removed readonly to avoid modifier mismatch with other declarations in the environment
+    aistudio: AIStudio;
   }
 }
 
@@ -39,16 +41,21 @@ const StartScreen: React.FC<StartScreenProps> = ({ onModelFinalized, onLoadSessi
 
   useEffect(() => {
     const checkKey = async () => {
-      const selected = await window.aistudio.hasSelectedApiKey();
-      setHasKey(selected);
+      // Safely access aistudio which is assumed to be pre-configured
+      if (window.aistudio) {
+        const selected = await window.aistudio.hasSelectedApiKey();
+        setHasKey(selected);
+      }
     };
     checkKey();
   }, []);
 
   const handleSelectKey = async () => {
-    await window.aistudio.openSelectKey();
-    // Proceed regardless of race condition as per instructions
-    setHasKey(true);
+    if (window.aistudio) {
+      await window.aistudio.openSelectKey();
+      // Proceed regardless of race condition as per instructions
+      setHasKey(true);
+    }
   };
 
   const handleFileSelect = useCallback(async (file: File) => {
