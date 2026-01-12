@@ -1,3 +1,4 @@
+
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -6,6 +7,7 @@
 body {
   background-color: #fff; /* Light gray background */
   color: #2a2a2a; /* Dark text color */
+  overflow-x: hidden;
 }
 
 /* Animation for gentle fade-in of components */
@@ -52,21 +54,28 @@ body {
 }
 
 /* Custom scrollbar for a more integrated look */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
 }
 
-::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 4px;
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-::-webkit-scrollbar-thumb {
-  background: #d1d5db; /* Light gray scrollbar */
-  border-radius: 4px;
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af; /* Darker gray on hover */
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

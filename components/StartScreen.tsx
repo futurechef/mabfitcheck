@@ -6,7 +6,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UploadCloudIcon } from './icons';
+import { UploadCloudIcon, RotateCcwIcon } from './icons';
 import { Compare } from './ui/compare';
 import { generateModelImage } from '../services/geminiService';
 import Spinner from './Spinner';
@@ -14,9 +14,11 @@ import { getFriendlyErrorMessage } from '../lib/utils';
 
 interface StartScreenProps {
   onModelFinalized: (modelUrl: string) => void;
+  onLoadSession?: () => void;
+  hasSavedSession?: boolean;
 }
 
-const StartScreen: React.FC<StartScreenProps> = ({ onModelFinalized }) => {
+const StartScreen: React.FC<StartScreenProps> = ({ onModelFinalized, onLoadSession, hasSavedSession }) => {
   const [userImageUrl, setUserImageUrl] = useState<string | null>(null);
   const [generatedModelUrl, setGeneratedModelUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -90,18 +92,31 @@ const StartScreen: React.FC<StartScreenProps> = ({ onModelFinalized }) => {
               <p className="mt-4 text-lg text-gray-600">
                 Experience the world's finest custom tailoring. Upload a photo to create your digital twin and try on our luxury shirting collection.
               </p>
-              <hr className="my-8 border-gray-200" />
-              <div className="flex flex-col items-center lg:items-start w-full gap-3">
-                <label htmlFor="image-upload-start" className="w-full relative flex items-center justify-center px-8 py-4 text-base font-semibold text-white bg-gray-900 rounded-md cursor-pointer group hover:bg-gray-700 transition-all shadow-lg hover:shadow-xl">
-                  <UploadCloudIcon className="w-5 h-5 mr-3" />
-                  Create Your Model
-                </label>
-                <input id="image-upload-start" type="file" className="hidden" accept="image/png, image/jpeg, image/webp" onChange={handleFileChange} />
-                <p className="text-gray-400 text-xs mt-1 italic">
-                  Best results with a clear, well-lit full-body photo.
-                </p>
-                {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+              
+              <div className="mt-8 flex flex-col sm:flex-row gap-4">
+                <div className="flex-1 flex flex-col gap-3">
+                    <label htmlFor="image-upload-start" className="w-full relative flex items-center justify-center px-8 py-4 text-base font-semibold text-white bg-gray-900 rounded-xl cursor-pointer group hover:bg-gray-700 transition-all shadow-lg hover:shadow-xl">
+                    <UploadCloudIcon className="w-5 h-5 mr-3" />
+                    Create Your Model
+                    </label>
+                    <input id="image-upload-start" type="file" className="hidden" accept="image/png, image/jpeg, image/webp" onChange={handleFileChange} />
+                    <p className="text-gray-400 text-[10px] italic">
+                    Best results with a clear, well-lit full-body photo.
+                    </p>
+                </div>
+                
+                {hasSavedSession && (
+                    <button 
+                        onClick={onLoadSession}
+                        className="flex items-center justify-center gap-2 px-8 py-4 bg-white border border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all shadow-sm"
+                    >
+                        <RotateCcwIcon className="w-5 h-5" />
+                        Resume Save
+                    </button>
+                )}
               </div>
+              
+              {error && <p className="text-red-500 text-sm mt-4 font-medium">{error}</p>}
             </div>
           </div>
           <div className="w-full lg:w-1/2 flex flex-col items-center justify-center">
@@ -109,7 +124,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ onModelFinalized }) => {
               firstImage="https://mabsuit-479703.web.app/shirts/michael-andrews-blue-denim-shirt.png"
               secondImage="https://storage.googleapis.com/mabbucket/MABSUITapp/fabric_swatches/SHFW-0222H.jpg"
               slideMode="drag"
-              className="w-full max-w-sm aspect-[2/3] rounded-2xl bg-gray-100 shadow-2xl border border-gray-200"
+              className="w-full max-w-sm aspect-[2/3] rounded-3xl bg-gray-100 shadow-2xl border border-gray-200"
             />
           </div>
         </motion.div>
@@ -159,13 +174,13 @@ const StartScreen: React.FC<StartScreenProps> = ({ onModelFinalized }) => {
                 >
                   <button 
                     onClick={reset}
-                    className="w-full sm:w-auto px-6 py-3 text-base font-semibold text-gray-700 bg-gray-200 rounded-md cursor-pointer hover:bg-gray-300 transition-colors"
+                    className="w-full sm:w-auto px-6 py-3 text-base font-semibold text-gray-700 bg-gray-200 rounded-xl cursor-pointer hover:bg-gray-300 transition-colors"
                   >
                     Use Different Photo
                   </button>
                   <button 
                     onClick={() => onModelFinalized(generatedModelUrl)}
-                    className="w-full sm:w-auto relative inline-flex items-center justify-center px-8 py-3 text-base font-semibold text-white bg-gray-900 rounded-md cursor-pointer group hover:bg-gray-700 transition-colors"
+                    className="w-full sm:w-auto relative inline-flex items-center justify-center px-8 py-3 text-base font-semibold text-white bg-gray-900 rounded-xl cursor-pointer group hover:bg-gray-700 transition-colors"
                   >
                     Proceed to Tailoring &rarr;
                   </button>
@@ -175,13 +190,13 @@ const StartScreen: React.FC<StartScreenProps> = ({ onModelFinalized }) => {
           </div>
           <div className="md:w-1/2 w-full flex items-center justify-center">
             <div 
-              className={`relative rounded-[1.25rem] transition-all duration-700 ease-in-out ${isGenerating ? 'border border-gray-300 animate-pulse' : 'border border-transparent'}`}
+              className={`relative rounded-3xl transition-all duration-700 ease-in-out ${isGenerating ? 'border border-gray-300 animate-pulse' : 'border border-transparent'}`}
             >
               <Compare
                 firstImage={userImageUrl}
                 secondImage={generatedModelUrl ?? userImageUrl}
                 slideMode="drag"
-                className="w-[280px] h-[420px] sm:w-[320px] sm:h-[480px] lg:w-[400px] lg:h-[600px] rounded-2xl bg-gray-100 shadow-xl"
+                className="w-[280px] h-[420px] sm:w-[320px] sm:h-[480px] lg:w-[400px] lg:h-[600px] rounded-3xl bg-gray-100 shadow-xl"
               />
             </div>
           </div>

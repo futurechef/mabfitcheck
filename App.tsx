@@ -12,9 +12,8 @@ import WardrobePanel from './components/WardrobeModal';
 import OutfitStack from './components/OutfitStack';
 import { generateVirtualTryOnImage, generatePoseVariation } from './services/geminiService';
 import { OutfitLayer, WardrobeItem } from './types';
-import { ChevronDownIcon, ChevronUpIcon } from './components/icons';
+import { ChevronDownIcon, ChevronUpIcon, SaveIcon } from './components/icons';
 import { defaultWardrobe } from './wardrobe';
-import Footer from './components/Footer';
 import { getFriendlyErrorMessage } from './lib/utils';
 import Spinner from './components/Spinner';
 import Header from './components/Header';
@@ -28,6 +27,8 @@ const POSE_INSTRUCTIONS = [
   "Walking towards camera",
   "Leaning against a wall",
 ];
+
+const LOCAL_STORAGE_KEY = 'mab_bespoke_session';
 
 const useMediaQuery = (query: string): boolean => {
   const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
@@ -63,7 +64,42 @@ const App: React.FC = () => {
   const [wardrobe, setWardrobe] = useState<WardrobeItem[]>(defaultWardrobe);
   const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false);
   const [activeTarget, setActiveTarget] = useState<'shirt' | 'suit'>('shirt');
+  const [tailorNotes, setTailorNotes] = useState<string>('');
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  
   const isMobile = useMediaQuery('(max-width: 767px)');
+
+  // Persistence logic
+  const saveSession = useCallback(() => {
+    const sessionData = {
+      modelImageUrl,
+      outfitHistory,
+      currentOutfitIndex,
+      currentPoseIndex,
+      activeTarget,
+      tailorNotes,
+    };
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(sessionData));
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 2000);
+  }, [modelImageUrl, outfitHistory, currentOutfitIndex, currentPoseIndex, activeTarget, tailorNotes]);
+
+  const loadSession = useCallback(() => {
+    const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        setModelImageUrl(data.modelImageUrl);
+        setOutfitHistory(data.outfitHistory);
+        setCurrentOutfitIndex(data.currentOutfitIndex);
+        setCurrentPoseIndex(data.currentPoseIndex);
+        setActiveTarget(data.activeTarget || 'shirt');
+        setTailorNotes(data.tailorNotes || '');
+      } catch (e) {
+        console.error("Failed to load session", e);
+      }
+    }
+  }, []);
 
   const activeOutfitLayers = useMemo(() => 
     outfitHistory.slice(0, currentOutfitIndex + 1), 
@@ -100,21 +136,24 @@ const App: React.FC = () => {
   };
 
   const handleStartOver = () => {
-    setModelImageUrl(null);
-    setOutfitHistory([]);
-    setCurrentOutfitIndex(0);
-    setIsLoading(false);
-    setLoadingMessage('');
-    setError(null);
-    setCurrentPoseIndex(0);
-    setIsSheetCollapsed(false);
-    setWardrobe(defaultWardrobe);
+    if (confirm("Are you sure you want to start over? This will clear your current session.")) {
+        setModelImageUrl(null);
+        setOutfitHistory([]);
+        setCurrentOutfitIndex(0);
+        setIsLoading(false);
+        setLoadingMessage('');
+        setError(null);
+        setCurrentPoseIndex(0);
+        setIsSheetCollapsed(false);
+        setWardrobe(defaultWardrobe);
+        setTailorNotes('');
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+    }
   };
 
   const handleGarmentSelect = useCallback(async (garmentSource: File | string, garmentInfo: WardrobeItem) => {
     if (!displayImageUrl || isLoading) return;
 
-    // Optional: allow same item if target is different
     const nextLayer = outfitHistory[currentOutfitIndex + 1];
     if (nextLayer && nextLayer.garment?.id === garmentInfo.id && nextLayer.target === activeTarget) {
         setCurrentOutfitIndex(prev => prev + 1);
@@ -208,23 +247,27 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="font-sans min-h-screen flex flex-col">
+    <div className="font-sans min-h-screen flex flex-col bg-white">
       <Header onShowHowItWorks={() => setIsHowItWorksOpen(true)} />
       <HowItWorksModal isOpen={isHowItWorksOpen} onClose={() => setIsHowItWorksOpen(false)} />
       
-      <main className="flex-grow">
+      <main className="flex-grow flex flex-col">
         <AnimatePresence mode="wait">
           {!modelImageUrl ? (
             <motion.div
               key="start-screen"
-              className="w-full min-h-[calc(100vh-8rem)] flex items-start sm:items-center justify-center bg-gray-50 p-4 pb-20"
+              className="w-full flex-grow flex items-start sm:items-center justify-center bg-gray-50 p-4"
               variants={viewVariants}
               initial="initial"
               animate="animate"
               exit="exit"
               transition={{ duration: 0.5, ease: 'easeInOut' }}
             >
-              <StartScreen onModelFinalized={handleModelFinalized} />
+              <StartScreen 
+                onModelFinalized={handleModelFinalized} 
+                onLoadSession={loadSession}
+                hasSavedSession={!!localStorage.getItem(LOCAL_STORAGE_KEY)}
+              />
             </motion.div>
           ) : (
             <motion.div
@@ -237,7 +280,7 @@ const App: React.FC = () => {
               transition={{ duration: 0.5, ease: 'easeInOut' }}
             >
               <div className="flex-grow relative flex flex-col md:flex-row overflow-hidden">
-                <div className="w-full h-full flex-grow flex items-center justify-center bg-white pb-16 relative">
+                <div className="w-full h-full flex-grow flex items-center justify-center bg-white relative overflow-hidden">
                   <Canvas 
                     displayImageUrl={displayImageUrl}
                     onStartOver={handleStartOver}
@@ -248,30 +291,63 @@ const App: React.FC = () => {
                     currentPoseIndex={currentPoseIndex}
                     availablePoseKeys={availablePoseKeys}
                   />
+                  
+                  {/* Save Floating Action */}
+                  <div className="absolute top-4 right-4 z-40 flex flex-col items-end gap-2">
+                    <button 
+                        onClick={saveSession}
+                        disabled={isLoading}
+                        className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-full shadow-lg hover:bg-gray-700 transition-all active:scale-95 disabled:opacity-50"
+                    >
+                        {saveSuccess ? (
+                            <span className="text-xs font-bold uppercase tracking-widest">Saved!</span>
+                        ) : (
+                            <>
+                                <SaveIcon className="w-4 h-4" />
+                                <span className="text-xs font-bold uppercase tracking-widest">Save Session</span>
+                            </>
+                        )}
+                    </button>
+                  </div>
                 </div>
 
                 <aside 
-                  className={`absolute md:relative md:flex-shrink-0 bottom-0 right-0 h-auto md:h-full w-full md:w-1/3 md:max-w-sm bg-white/80 backdrop-blur-md flex flex-col border-t md:border-t-0 md:border-l border-gray-200/60 transition-transform duration-500 ease-in-out ${isSheetCollapsed ? 'translate-y-[calc(100%-4.5rem)]' : 'translate-y-0'} md:translate-y-0`}
-                  style={{ transitionProperty: 'transform' }}
+                  className={`absolute md:relative md:flex-shrink-0 bottom-0 right-0 h-auto md:h-full w-full md:w-1/3 md:max-w-sm bg-white shadow-2xl md:shadow-none flex flex-col border-t md:border-t-0 md:border-l border-gray-200 transition-transform duration-500 ease-in-out ${isSheetCollapsed ? 'translate-y-[calc(100%-4.5rem)]' : 'translate-y-0'} md:translate-y-0 z-50`}
                 >
                     <button 
                       onClick={() => setIsSheetCollapsed(!isSheetCollapsed)} 
-                      className="md:hidden w-full h-8 flex items-center justify-center bg-gray-100/50"
-                      aria-label={isSheetCollapsed ? 'Expand panel' : 'Collapse panel'}
+                      className="md:hidden w-full h-8 flex items-center justify-center bg-gray-50 border-b border-gray-100"
                     >
-                      {isSheetCollapsed ? <ChevronUpIcon className="w-6 h-6 text-gray-500" /> : <ChevronDownIcon className="w-6 h-6 text-gray-500" />}
+                      {isSheetCollapsed ? <ChevronUpIcon className="w-5 h-5 text-gray-400" /> : <ChevronDownIcon className="w-5 h-5 text-gray-400" />}
                     </button>
-                    <div className="p-4 md:p-6 pb-20 overflow-y-auto flex-grow flex flex-col gap-8">
+                    
+                    <div className="p-4 md:p-6 pb-12 overflow-y-auto flex-grow flex flex-col gap-8 custom-scrollbar">
                       {error && (
-                        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded-md" role="alert">
-                          <p className="font-bold">Error</p>
-                          <p>{error}</p>
+                        <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-md" role="alert">
+                          <p className="text-sm font-bold">System Alert</p>
+                          <p className="text-xs">{error}</p>
                         </div>
                       )}
+
                       <OutfitStack 
                         outfitHistory={activeOutfitLayers}
                         onRemoveLastGarment={handleRemoveLastGarment}
                       />
+
+                      {/* Tailor Notes Section */}
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-xl font-serif tracking-wider text-gray-800">Tailor Notes</h2>
+                            <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Client Copy</span>
+                        </div>
+                        <textarea
+                          value={tailorNotes}
+                          onChange={(e) => setTailorNotes(e.target.value)}
+                          placeholder="Note fit adjustments, fabric preferences, or styling advice for the client..."
+                          className="w-full min-h-[120px] p-4 text-sm font-sans bg-[#fffaf0] border border-[#e3dcd1] rounded-xl focus:ring-2 focus:ring-gray-200 focus:outline-none placeholder:italic placeholder:text-gray-400 transition-all shadow-inner"
+                        />
+                      </div>
+
                       <WardrobePanel
                         onGarmentSelect={handleGarmentSelect}
                         activeGarmentIds={activeGarmentIds}
@@ -283,17 +359,18 @@ const App: React.FC = () => {
                     </div>
                 </aside>
               </div>
+
               <AnimatePresence>
                 {isLoading && isMobile && (
                   <motion.div
-                    className="fixed inset-0 bg-white/80 backdrop-blur-md flex flex-col items-center justify-center z-50"
+                    className="fixed inset-0 bg-white/90 backdrop-blur-md flex flex-col items-center justify-center z-[100]"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
                     <Spinner />
                     {loadingMessage && (
-                      <p className="text-lg font-serif text-gray-700 mt-4 text-center px-4">{loadingMessage}</p>
+                      <p className="text-lg font-serif text-gray-700 mt-4 text-center px-4 italic">{loadingMessage}</p>
                     )}
                   </motion.div>
                 )}
@@ -302,7 +379,6 @@ const App: React.FC = () => {
           )}
         </AnimatePresence>
       </main>
-      <Footer isOnDressingScreen={!!modelImageUrl} />
     </div>
   );
 };
