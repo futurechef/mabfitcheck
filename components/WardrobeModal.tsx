@@ -65,21 +65,21 @@ const WardrobePanel: React.FC<WardrobePanelProps> = ({
     };
 
   return (
-    <div className="pt-6 border-t border-gray-400/50 flex flex-col gap-4">
+    <div className="pt-6 border-t border-[#E3DCD1] flex flex-col gap-4">
         <div className="flex items-center justify-between">
             <h2 className="text-xl font-serif tracking-wider text-gray-800">Catalog</h2>
-            <div className="flex bg-gray-100 rounded-lg p-1 gap-1">
+            <div className="flex bg-[#E3DCD144] rounded-lg p-1 gap-1">
                 <button 
                     onClick={() => onTargetChange('shirt')}
                     className={`px-3 py-1 text-[10px] md:text-xs font-bold rounded-md transition-all ${activeTarget === 'shirt' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
                 >
-                    TO SHIRT
+                    SHIRT
                 </button>
                 <button 
                     onClick={() => onTargetChange('suit')}
                     className={`px-3 py-1 text-[10px] md:text-xs font-bold rounded-md transition-all ${activeTarget === 'suit' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
                 >
-                    TO SUIT
+                    SUIT
                 </button>
             </div>
         </div>
@@ -90,7 +90,7 @@ const WardrobePanel: React.FC<WardrobePanelProps> = ({
                 <button 
                     key={cat} 
                     onClick={() => setSelectedCategory(cat)}
-                    className={`px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-bold whitespace-nowrap transition-all border ${selectedCategory === cat ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400'}`}
+                    className={`px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-bold whitespace-nowrap transition-all border ${selectedCategory === cat ? 'bg-[#3D3D3D] text-white border-[#3D3D3D]' : 'bg-white text-gray-500 border-[#E3DCD1] hover:border-[#B8A66F]'}`}
                 >
                     {cat}
                 </button>
@@ -105,32 +105,32 @@ const WardrobePanel: React.FC<WardrobePanelProps> = ({
                 key={item.id}
                 onClick={() => handleGarmentClick(item)}
                 disabled={isLoading || isActive}
-                className="relative aspect-square border rounded-lg overflow-hidden transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-800 group disabled:opacity-60 disabled:cursor-not-allowed"
+                className="relative aspect-square border border-[#E3DCD1] rounded-lg overflow-hidden transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#B8A66F] group disabled:opacity-60 disabled:cursor-not-allowed hover:shadow-md"
                 aria-label={`Select ${item.name}`}
                 >
-                <img src={item.url} alt={item.name} className="w-full h-full object-cover" />
+                <img src={item.url} alt={item.name} className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all duration-500" />
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <p className="text-white text-[10px] font-bold text-center p-1 leading-tight">{item.name}</p>
+                    <p className="text-white text-[10px] font-bold text-center p-1 leading-tight uppercase tracking-widest">{item.name}</p>
                 </div>
                 {isActive && (
-                    <div className="absolute inset-0 bg-gray-900/70 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-[#B8A66FBB] flex items-center justify-center backdrop-blur-[1px]">
                         <CheckCircleIcon className="w-8 h-8 text-white" />
                     </div>
                 )}
                 </button>
             );
             })}
-            <label htmlFor="custom-garment-upload" className={`relative aspect-square border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-gray-500 transition-colors ${isLoading ? 'cursor-not-allowed bg-gray-100' : 'hover:border-gray-400 hover:text-gray-600 cursor-pointer'}`}>
+            <label htmlFor="custom-garment-upload" className={`relative aspect-square border-2 border-dashed border-[#E3DCD1] rounded-lg flex flex-col items-center justify-center text-gray-400 transition-all ${isLoading ? 'cursor-not-allowed bg-gray-50' : 'hover:border-[#B8A66F] hover:text-[#B8A66F] cursor-pointer hover:bg-white hover:shadow-inner'}`}>
                 <UploadCloudIcon className="w-6 h-6 mb-1"/>
-                <span className="text-[10px] text-center font-bold">UPLOAD</span>
+                <span className="text-[10px] text-center font-bold tracking-widest uppercase">Upload</span>
                 <input id="custom-garment-upload" type="file" className="hidden" accept="image/png, image/jpeg, image/webp, image/avif, image/heic, image/heif" onChange={handleFileChange} disabled={isLoading}/>
             </label>
         </div>
         
         {filteredWardrobe.length === 0 && selectedCategory !== 'All' && (
-             <p className="text-center text-sm text-gray-500 mt-4">No items in this category.</p>
+             <p className="text-center text-[10px] uppercase tracking-widest text-gray-400 mt-4">Empty Atelier</p>
         )}
-        {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
+        {error && <p className="text-red-500 text-xs mt-4 text-center">{error}</p>}
     </div>
   );
 };

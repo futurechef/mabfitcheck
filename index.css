@@ -5,9 +5,22 @@
 */
 
 body {
-  background-color: #fff; /* Light gray background */
-  color: #2a2a2a; /* Dark text color */
+  background-color: #F5F2ED; /* Michael Andrews Signature Cream */
+  color: #3D3D3D; /* Charcoal Text */
   overflow-x: hidden;
+  font-family: 'Inter', sans-serif;
+}
+
+h1, h2, h3, .font-serif {
+  font-family: 'Instrument Serif', serif;
+}
+
+.text-gold {
+  color: #B8A66F;
+}
+
+.bg-gold {
+  background-color: #B8A66F;
 }
 
 /* Animation for gentle fade-in of components */
@@ -40,23 +53,10 @@ body {
   animation: zoom-in 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
-/* Animation for the wardrobe sheet to slide up from the bottom */
-@keyframes slide-up {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-.animate-slide-up {
-  animation: slide-up 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-}
-
 /* Custom scrollbar for a more integrated look */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -64,12 +64,12 @@ body {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #e2e8f0;
+  background: #B8A66F44;
   border-radius: 10px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #cbd5e1;
+  background: #B8A66F;
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -78,4 +78,12 @@ body {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Bespoke Tailor Paper Effect */
+.paper-effect {
+  background-color: #FFFDF9;
+  background-image: radial-gradient(#B8A66F11 1px, transparent 0);
+  background-size: 20px 20px;
+  box-shadow: inset 0 0 40px rgba(184, 166, 111, 0.05), 0 2px 10px rgba(0,0,0,0.05);
 }

@@ -12,7 +12,8 @@ import WardrobePanel from './components/WardrobeModal';
 import OutfitStack from './components/OutfitStack';
 import { generateVirtualTryOnImage, generatePoseVariation } from './services/geminiService';
 import { OutfitLayer, WardrobeItem } from './types';
-import { ChevronDownIcon, ChevronUpIcon, SaveIcon } from './components/icons';
+// Added ShirtIcon to the imports to resolve "Cannot find name 'ShirtIcon'" error
+import { ChevronDownIcon, ChevronUpIcon, SaveIcon, ShirtIcon } from './components/icons';
 import { defaultWardrobe } from './wardrobe';
 import { getFriendlyErrorMessage } from './lib/utils';
 import Spinner from './components/Spinner';
@@ -28,7 +29,7 @@ const POSE_INSTRUCTIONS = [
   "Leaning against a wall",
 ];
 
-const LOCAL_STORAGE_KEY = 'mab_bespoke_session';
+const LOCAL_STORAGE_KEY = 'mab_bespoke_session_v2';
 
 const useMediaQuery = (query: string): boolean => {
   const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
@@ -65,23 +66,30 @@ const App: React.FC = () => {
   const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false);
   const [activeTarget, setActiveTarget] = useState<'shirt' | 'suit'>('shirt');
   const [tailorNotes, setTailorNotes] = useState<string>('');
-  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   
   const isMobile = useMediaQuery('(max-width: 767px)');
 
   // Persistence logic
   const saveSession = useCallback(() => {
-    const sessionData = {
-      modelImageUrl,
-      outfitHistory,
-      currentOutfitIndex,
-      currentPoseIndex,
-      activeTarget,
-      tailorNotes,
-    };
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(sessionData));
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2000);
+    setSaveStatus('saving');
+    try {
+        const sessionData = {
+          modelImageUrl,
+          outfitHistory,
+          currentOutfitIndex,
+          currentPoseIndex,
+          activeTarget,
+          tailorNotes,
+        };
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(sessionData));
+        setSaveStatus('success');
+        setTimeout(() => setSaveStatus('idle'), 2000);
+    } catch (e) {
+        console.error("Failed to save session", e);
+        setSaveStatus('error');
+        alert("The session data is too large for browser storage. Consider finishing the current design.");
+    }
   }, [modelImageUrl, outfitHistory, currentOutfitIndex, currentPoseIndex, activeTarget, tailorNotes]);
 
   const loadSession = useCallback(() => {
@@ -247,7 +255,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="font-sans min-h-screen flex flex-col bg-white">
+    <div className="font-sans min-h-screen flex flex-col bg-[#F5F2ED]">
       <Header onShowHowItWorks={() => setIsHowItWorksOpen(true)} />
       <HowItWorksModal isOpen={isHowItWorksOpen} onClose={() => setIsHowItWorksOpen(false)} />
       
@@ -256,7 +264,7 @@ const App: React.FC = () => {
           {!modelImageUrl ? (
             <motion.div
               key="start-screen"
-              className="w-full flex-grow flex items-start sm:items-center justify-center bg-gray-50 p-4"
+              className="w-full flex-grow flex items-start sm:items-center justify-center p-4"
               variants={viewVariants}
               initial="initial"
               animate="animate"
@@ -297,10 +305,12 @@ const App: React.FC = () => {
                     <button 
                         onClick={saveSession}
                         disabled={isLoading}
-                        className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-full shadow-lg hover:bg-gray-700 transition-all active:scale-95 disabled:opacity-50"
+                        className="flex items-center gap-2 bg-[#1A2D4D] text-white px-5 py-2.5 rounded-full shadow-xl hover:bg-[#2C3E50] transition-all active:scale-95 disabled:opacity-50"
                     >
-                        {saveSuccess ? (
-                            <span className="text-xs font-bold uppercase tracking-widest">Saved!</span>
+                        {saveStatus === 'success' ? (
+                            <span className="text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                                <SaveIcon className="w-4 h-4" /> Progress Saved
+                            </span>
                         ) : (
                             <>
                                 <SaveIcon className="w-4 h-4" />
@@ -321,7 +331,7 @@ const App: React.FC = () => {
                       {isSheetCollapsed ? <ChevronUpIcon className="w-5 h-5 text-gray-400" /> : <ChevronDownIcon className="w-5 h-5 text-gray-400" />}
                     </button>
                     
-                    <div className="p-4 md:p-6 pb-12 overflow-y-auto flex-grow flex flex-col gap-8 custom-scrollbar">
+                    <div className="p-4 md:p-6 pb-20 overflow-y-auto flex-grow flex flex-col gap-8 custom-scrollbar bg-[#FDFCFB]">
                       {error && (
                         <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-md" role="alert">
                           <p className="text-sm font-bold">System Alert</p>
@@ -338,14 +348,20 @@ const App: React.FC = () => {
                       <div className="flex flex-col gap-3">
                         <div className="flex items-center justify-between">
                             <h2 className="text-xl font-serif tracking-wider text-gray-800">Tailor Notes</h2>
-                            <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Client Copy</span>
+                            <span className="text-[10px] uppercase tracking-widest text-[#B8A66F] font-bold">Confidential</span>
                         </div>
-                        <textarea
-                          value={tailorNotes}
-                          onChange={(e) => setTailorNotes(e.target.value)}
-                          placeholder="Note fit adjustments, fabric preferences, or styling advice for the client..."
-                          className="w-full min-h-[120px] p-4 text-sm font-sans bg-[#fffaf0] border border-[#e3dcd1] rounded-xl focus:ring-2 focus:ring-gray-200 focus:outline-none placeholder:italic placeholder:text-gray-400 transition-all shadow-inner"
-                        />
+                        <div className="relative group">
+                            <textarea
+                              value={tailorNotes}
+                              onChange={(e) => setTailorNotes(e.target.value)}
+                              placeholder="fit adjustments, fabric preferences, or client feedback..."
+                              className="w-full min-h-[140px] p-4 text-sm font-sans bg-[#FFFDF9] border border-[#E3DCD1] rounded-xl focus:ring-2 focus:ring-[#B8A66F33] focus:border-[#B8A66F] focus:outline-none placeholder:italic placeholder:text-gray-300 transition-all shadow-inner custom-scrollbar resize-none"
+                            />
+                            <div className="absolute bottom-3 right-3 opacity-20 group-focus-within:opacity-50 transition-opacity">
+                                <ShirtIcon className="w-4 h-4 text-[#B8A66F]" />
+                            </div>
+                        </div>
+                        <p className="text-[10px] text-gray-400 text-center italic">Notes are automatically saved locally.</p>
                       </div>
 
                       <WardrobePanel
@@ -363,14 +379,14 @@ const App: React.FC = () => {
               <AnimatePresence>
                 {isLoading && isMobile && (
                   <motion.div
-                    className="fixed inset-0 bg-white/90 backdrop-blur-md flex flex-col items-center justify-center z-[100]"
+                    className="fixed inset-0 bg-white/95 backdrop-blur-md flex flex-col items-center justify-center z-[100]"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
                     <Spinner />
                     {loadingMessage && (
-                      <p className="text-lg font-serif text-gray-700 mt-4 text-center px-4 italic">{loadingMessage}</p>
+                      <p className="text-lg font-serif text-gray-700 mt-6 text-center px-8 italic">{loadingMessage}</p>
                     )}
                   </motion.div>
                 )}
