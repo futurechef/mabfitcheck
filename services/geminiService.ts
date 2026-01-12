@@ -5,6 +5,7 @@
 */
 
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
+import { ClothingTarget } from "../types";
 
 /**
  * Converts a File object to a Gemini-compatible inlineData part.
@@ -22,10 +23,8 @@ const fileToPart = async (file: File) => {
 
 /**
  * Fetches an image from a URL and converts it to a Gemini-compatible inlineData part.
- * Includes a CORS proxy fallback to handle restrictive server configurations.
  */
 const urlToPart = async (url: string) => {
-    // If it's already a data URL, just parse it
     if (url.startsWith('data:')) {
         const { mimeType, data } = dataUrlToParts(url);
         return { inlineData: { mimeType, data } };
@@ -47,28 +46,19 @@ const urlToPart = async (url: string) => {
     };
 
     try {
-        // Attempt 1: Direct fetch
         return await fetchImage(url);
     } catch (err) {
-        console.warn(`Direct fetch failed for ${url}, attempting via proxy...`, err);
         try {
-            // Attempt 2: CORS Proxy fallback
             const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
             return await fetchImage(proxyUrl);
         } catch (proxyErr) {
-            console.error("Failed to fetch image from URL even with proxy:", url, proxyErr);
             throw new Error(
-                `Image Load Failure: Could not access the garment image at ${url}. ` +
-                `This is likely due to CORS restrictions on the hosting server. ` +
-                `The proxy attempt also failed. Please try uploading a local image instead.`
+                `Image Load Failure: Could not access image at ${url}. Please try a local file.`
             );
         }
     }
 };
 
-/**
- * Common helper to handle both File and URL/DataURL sources.
- */
 const sourceToPart = async (source: File | string) => {
     if (source instanceof File) return fileToPart(source);
     return urlToPart(source);
@@ -88,38 +78,41 @@ const dataUrlToPart = (dataUrl: string) => {
 }
 
 const handleApiResponse = (response: GenerateContentResponse): string => {
-    if (response.promptFeedback?.blockReason) {
-        const { blockReason, blockReasonMessage } = response.promptFeedback;
-        const errorMessage = `Request was blocked. Reason: ${blockReason}. ${blockReasonMessage || ''}`;
-        throw new Error(errorMessage);
-    }
+    const candidate = response.candidates?.[0];
+    if (!candidate) throw new Error("No candidates returned from AI.");
 
-    for (const candidate of response.candidates ?? []) {
-        const imagePart = candidate.content?.parts?.find(part => part.inlineData);
-        if (imagePart?.inlineData) {
-            const { mimeType, data } = imagePart.inlineData;
+    for (const part of candidate.content?.parts ?? []) {
+        if (part.inlineData) {
+            const { mimeType, data } = part.inlineData;
             return `data:${mimeType};base64,${data}`;
         }
     }
 
-    const finishReason = response.candidates?.[0]?.finishReason;
+    const finishReason = candidate.finishReason;
     if (finishReason && finishReason !== 'STOP') {
         throw new Error(`Generation stopped: ${finishReason}`);
     }
     
-    throw new Error("The AI model did not return an image. This can happen due to safety filters.");
+    throw new Error("The AI model did not return an image. This can happen due to safety filters or instruction complexity.");
 };
 
-// Initialize GoogleGenAI correctly using the process.env.API_KEY string
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-const model = 'gemini-2.5-flash-image';
+// Use the high-quality Gemini 3 Pro Image model
+const MODEL_NAME = 'gemini-3-pro-image-preview';
 
 export const generateModelImage = async (userImage: File): Promise<string> => {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const userImagePart = await fileToPart(userImage);
-    const prompt = "You are a master bespoke tailor and fashion photographer. Transform the person in this image into a full-body luxury fashion model. The background must be a sophisticated, clean, neutral studio backdrop (#f8f8f8). Preserve the person's identity and body type perfectly. Place them in a standard, elegant standing model pose. Return ONLY the final image.";
+    const prompt = "Act as a high-end fashion photographer and bespoke digital tailor. Re-render the person in this photo into a full-body model image. Background: minimalist light grey studio. Pose: Professional standing posture. Ensure identity, hair texture, and anatomical proportions are perfectly preserved. Return ONLY the high-resolution image.";
+    
     const response = await ai.models.generateContent({
-        model,
+        model: MODEL_NAME,
         contents: { parts: [userImagePart, { text: prompt }] },
+        config: {
+            imageConfig: {
+                aspectRatio: "1:1",
+                imageSize: "1K"
+            }
+        }
     });
     return handleApiResponse(response);
 };
@@ -127,39 +120,91 @@ export const generateModelImage = async (userImage: File): Promise<string> => {
 export const generateVirtualTryOnImage = async (
     modelImageUrl: string, 
     garmentSource: File | string, 
-    target: 'shirt' | 'suit' = 'shirt'
+    target: ClothingTarget = 'shirt'
 ): Promise<string> => {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const modelImagePart = dataUrlToPart(modelImageUrl);
     const garmentImagePart = await sourceToPart(garmentSource);
     
-    let targetPrompt = '';
-    if (target === 'suit') {
-        targetPrompt = `You are a virtual bespoke tailor for Michael Andrews. Apply the provided fabric texture to a full bespoke suit (jacket and trousers). The suit must be perfectly tailored to the model's body. Replicate the fabric's color, pattern, and weave precisely on both the jacket and trousers. The jacket should be worn over whatever is currently under it.`;
-    } else {
-        targetPrompt = `You are a virtual bespoke tailor for Michael Andrews. Apply the provided garment or fabric texture to a tailored shirt. The shirt must have natural folds, crisp collars, and follow the model's body shape perfectly. Replicate the color, pattern, and weave precisely.`;
+    let instructions = '';
+    switch (target) {
+        case 'jacket':
+            instructions = "Carefully add or replace ONLY the suit jacket with the provided fabric/garment. Keep the existing shirt and trousers perfectly intact. Ensure the jacket's drape and tailoring are world-class, matching the model's build.";
+            break;
+        case 'trousers':
+            instructions = "Replace ONLY the trousers with the provided fabric/garment. Keep the existing jacket (if any) and shirt perfectly intact. Ensure the trouser break and crease are professionally rendered.";
+            break;
+        case 'suit':
+            instructions = "Expertly tailor a full bespoke suit (BOTH jacket and trousers) using the provided fabric/garment. The fit must be sharp and the pattern must be perfectly aligned across all seams.";
+            break;
+        default: // shirt
+            instructions = "Tailor a crisp bespoke shirt using the provided fabric/garment. If a jacket is currently worn, show the shirt details through the opening and at the cuffs. Maintain realistic collar stiffness.";
+            break;
     }
 
-    const prompt = `${targetPrompt} 
-
-**Bespoke Standards:**
-- Impeccable fit and drape.
-- High-quality textile rendering with realistic lighting.
-- Preserve the model's identity, hair, pose, and background perfectly.
-- Return ONLY the final, edited image.`;
+    const prompt = `Michael Andrews Atelier Virtual Try-On.
+    Model: [Model Image Provided]
+    Target Article: ${target.toUpperCase()}
+    Fabric/Garment Source: [Source Provided]
+    
+    ${instructions}
+    
+    Requirements:
+    - Absolutely preserve model identity and existing background.
+    - Photorealistic rendering of textile weight and drape.
+    - High-end bespoke tailoring standards only.
+    - Return ONLY the final composite image.`;
 
     const response = await ai.models.generateContent({
-        model,
+        model: MODEL_NAME,
         contents: { parts: [modelImagePart, garmentImagePart, { text: prompt }] },
+        config: {
+            imageConfig: {
+                aspectRatio: "1:1",
+                imageSize: "1K"
+            }
+        }
+    });
+    return handleApiResponse(response);
+};
+
+export const generateJacketRemovalImage = async (modelImageUrl: string): Promise<string> => {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const modelImagePart = dataUrlToPart(modelImageUrl);
+    
+    const prompt = "Michael Andrews Atelier. DIGITAL DE-LAYERING. Please remove the outermost suit jacket from the model in this image. Show the bespoke shirt and trousers that were underneath. Ensure the shirt fit is perfectly rendered where it was previously covered by the jacket. Maintain the same background and model identity. Return ONLY the re-rendered image.";
+
+    const response = await ai.models.generateContent({
+        model: MODEL_NAME,
+        contents: { parts: [modelImagePart, { text: prompt }] },
+        config: {
+            imageConfig: {
+                aspectRatio: "1:1",
+                imageSize: "1K"
+            }
+        }
     });
     return handleApiResponse(response);
 };
 
 export const generatePoseVariation = async (tryOnImageUrl: string, poseInstruction: string): Promise<string> => {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const tryOnImagePart = dataUrlToPart(tryOnImageUrl);
-    const prompt = `Regenerate this image from a different perspective: "${poseInstruction}". The person, bespoke outfit, and background must remain perfectly consistent. Return ONLY the final image.`;
+    const prompt = `Anatomical Re-rendering. 
+    Maintain identity, background, and the exact bespoke outfit from the reference image.
+    Adjust the person's pose to: "${poseInstruction}".
+    The fabric drape must react naturally to the new body position. 
+    Return ONLY the final high-quality image.`;
+    
     const response = await ai.models.generateContent({
-        model,
+        model: MODEL_NAME,
         contents: { parts: [tryOnImagePart, { text: prompt }] },
+        config: {
+            imageConfig: {
+                aspectRatio: "1:1",
+                imageSize: "1K"
+            }
+        }
     });
     return handleApiResponse(response);
 };

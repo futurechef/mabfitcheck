@@ -6,54 +6,91 @@
 
 import React from 'react';
 import { OutfitLayer } from '../types';
-import { Trash2Icon } from './icons';
+import { Trash2Icon, RotateCcwIcon, ShirtIcon } from './icons';
 
 interface OutfitStackProps {
   outfitHistory: OutfitLayer[];
   onRemoveLastGarment: () => void;
+  onEditLayer: (index: number) => void;
+  editingLayerIndex: number | null;
 }
 
-const OutfitStack: React.FC<OutfitStackProps> = ({ outfitHistory, onRemoveLastGarment }) => {
+const OutfitStack: React.FC<OutfitStackProps> = ({ outfitHistory, onRemoveLastGarment, onEditLayer, editingLayerIndex }) => {
   return (
     <div className="flex flex-col">
-      <h2 className="text-xl font-serif tracking-wider text-gray-800 border-b border-gray-400/50 pb-2 mb-3">Outfit Stack</h2>
-      <div className="space-y-2">
+      <div className="flex items-center justify-between border-b border-[#E3DCD1] pb-3 mb-4">
+        <h2 className="text-2xl font-serif tracking-wider text-[#3D3D3D]">Outfit Stack</h2>
+        <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">{outfitHistory.length} Layers</span>
+      </div>
+      <div className="space-y-3">
         {outfitHistory.map((layer, index) => (
           <div
-            key={`${layer.garment?.id || 'base'}-${index}`}
-            className="flex items-center justify-between bg-white/50 p-2 rounded-lg animate-fade-in border border-gray-200/80 shadow-sm"
+            key={`${layer.garment?.id || (layer.action === 'remove_jacket' ? 'remove_jacket' : 'base')}-${index}`}
+            className={`flex items-center justify-between p-3 rounded-xl animate-fade-in border transition-all group ${editingLayerIndex === index ? 'bg-[#FDFCFB] border-[#B8A66F] shadow-md ring-2 ring-[#B8A66F33]' : 'bg-white/60 border-[#E3DCD1] shadow-sm hover:shadow-md'}`}
           >
-            <div className="flex items-center overflow-hidden">
-                <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 mr-3 text-xs font-bold text-gray-600 bg-gray-200 rounded-full">
+            <div className="flex items-center overflow-hidden flex-grow cursor-pointer" onClick={() => onEditLayer(index)}>
+                <span className={`flex-shrink-0 flex items-center justify-center w-6 h-6 mr-4 text-[10px] font-bold rounded-full border transition-colors ${editingLayerIndex === index ? 'text-white bg-[#B8A66F] border-[#B8A66F]' : 'text-[#B8A66F] bg-[#B8A66F11] border-[#B8A66F33]'}`}>
                   {index + 1}
                 </span>
-                {layer.garment && (
-                    <img src={layer.garment.url} alt={layer.garment.name} className="flex-shrink-0 w-10 h-10 object-cover rounded-md mr-3 border border-gray-100" />
-                )}
+                {layer.garment ? (
+                    <div className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden mr-4 border border-[#E3DCD1]">
+                      <img src={layer.garment.url} alt={layer.garment.name} className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all duration-500" />
+                    </div>
+                ) : layer.action === 'remove_jacket' ? (
+                    <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-red-50 flex items-center justify-center mr-4 border border-red-100">
+                      <ShirtIcon className="w-6 h-6 text-red-300" />
+                    </div>
+                ) : null}
                 <div className="flex flex-col overflow-hidden">
-                    <span className="font-semibold text-gray-800 truncate text-sm" title={layer.garment?.name}>
-                      {layer.garment ? layer.garment.name : 'Base Model'}
+                    <span className="font-bold text-[#3D3D3D] truncate text-sm uppercase tracking-wide">
+                      {layer.garment ? layer.garment.name : (layer.action === 'remove_jacket' ? 'Jacket Removed' : 'Digital Twin Base')}
                     </span>
-                    {layer.target && (
-                        <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">
-                            Applied to {layer.target}
-                        </span>
-                    )}
+                    <div className="flex items-center gap-2">
+                        {layer.target && (
+                            <span className="text-[9px] uppercase tracking-[0.2em] text-[#B8A66F] font-bold mt-0.5">
+                                {layer.target} Piece
+                            </span>
+                        )}
+                        {index > 0 && editingLayerIndex !== index && layer.garment && (
+                            <span className="text-[8px] uppercase tracking-widest text-gray-400 font-bold mt-0.5 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                                • Replace Piece
+                            </span>
+                        )}
+                        {editingLayerIndex === index && (
+                             <span className="text-[8px] uppercase tracking-widest text-[#B8A66F] font-bold mt-0.5 animate-pulse">
+                                • Editing...
+                             </span>
+                        )}
+                    </div>
                 </div>
             </div>
-            {index > 0 && index === outfitHistory.length - 1 && (
-               <button
-                onClick={onRemoveLastGarment}
-                className="flex-shrink-0 text-gray-500 hover:text-red-600 transition-colors p-2 rounded-md hover:bg-red-50"
-                aria-label={`Remove ${layer.garment?.name}`}
-              >
-                <Trash2Icon className="w-5 h-5" />
-              </button>
-            )}
+            
+            <div className="flex items-center gap-1">
+                {index > 0 && layer.garment && (
+                    <button
+                        onClick={() => onEditLayer(index)}
+                        className={`p-2 rounded-lg transition-colors ${editingLayerIndex === index ? 'text-[#B8A66F] bg-[#B8A66F11]' : 'text-gray-400 hover:text-[#B8A66F] hover:bg-[#FDFCFB]'}`}
+                        title="Replace Piece"
+                    >
+                        <RotateCcwIcon className="w-5 h-5" />
+                    </button>
+                )}
+                {index > 0 && index === outfitHistory.length - 1 && (
+                <button
+                    onClick={onRemoveLastGarment}
+                    className="flex-shrink-0 text-gray-400 hover:text-red-600 transition-colors p-2 rounded-lg hover:bg-red-50"
+                    aria-label={`Remove ${layer.garment?.name || 'action'}`}
+                >
+                    <Trash2Icon className="w-5 h-5" />
+                </button>
+                )}
+            </div>
           </div>
         ))}
         {outfitHistory.length === 1 && (
-            <p className="text-center text-sm text-gray-500 pt-4">Your stacked items will appear here. Select an item from the catalog below.</p>
+            <div className="text-center py-6 px-4 border-2 border-dashed border-[#E3DCD1] rounded-2xl bg-[#FFFDF9]/50">
+              <p className="text-[11px] uppercase tracking-widest text-gray-400 font-bold">Build your silhouette layer by layer below</p>
+            </div>
         )}
       </div>
     </div>

@@ -10,10 +10,9 @@ import StartScreen from './components/StartScreen';
 import Canvas from './components/Canvas';
 import WardrobePanel from './components/WardrobeModal';
 import OutfitStack from './components/OutfitStack';
-import { generateVirtualTryOnImage, generatePoseVariation } from './services/geminiService';
-import { OutfitLayer, WardrobeItem } from './types';
-// Added ShirtIcon to the imports to resolve "Cannot find name 'ShirtIcon'" error
-import { ChevronDownIcon, ChevronUpIcon, SaveIcon, ShirtIcon } from './components/icons';
+import { generateVirtualTryOnImage, generatePoseVariation, generateJacketRemovalImage } from './services/geminiService';
+import { OutfitLayer, WardrobeItem, ClothingTarget } from './types';
+import { ChevronDownIcon, ChevronUpIcon, SaveIcon, ShirtIcon, PlusIcon } from './components/icons';
 import { defaultWardrobe } from './wardrobe';
 import { getFriendlyErrorMessage } from './lib/utils';
 import Spinner from './components/Spinner';
@@ -29,7 +28,7 @@ const POSE_INSTRUCTIONS = [
   "Leaning against a wall",
 ];
 
-const LOCAL_STORAGE_KEY = 'mab_bespoke_session_v2';
+const LOCAL_STORAGE_KEY = 'mab_bespoke_session_v4';
 
 const useMediaQuery = (query: string): boolean => {
   const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
@@ -61,35 +60,29 @@ const App: React.FC = () => {
   const [loadingMessage, setLoadingMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [currentPoseIndex, setCurrentPoseIndex] = useState(0);
-  const [isSheetCollapsed, setIsSheetCollapsed] = useState(false);
+  const [isSheetCollapsed, setIsSheetCollapsed] = useState(true);
   const [wardrobe, setWardrobe] = useState<WardrobeItem[]>(defaultWardrobe);
   const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false);
-  const [activeTarget, setActiveTarget] = useState<'shirt' | 'suit'>('shirt');
+  const [activeTarget, setActiveTarget] = useState<ClothingTarget>('shirt');
   const [tailorNotes, setTailorNotes] = useState<string>('');
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [editingLayerIndex, setEditingLayerIndex] = useState<number | null>(null);
   
   const isMobile = useMediaQuery('(max-width: 767px)');
 
   // Persistence logic
   const saveSession = useCallback(() => {
-    setSaveStatus('saving');
-    try {
-        const sessionData = {
-          modelImageUrl,
-          outfitHistory,
-          currentOutfitIndex,
-          currentPoseIndex,
-          activeTarget,
-          tailorNotes,
-        };
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(sessionData));
-        setSaveStatus('success');
-        setTimeout(() => setSaveStatus('idle'), 2000);
-    } catch (e) {
-        console.error("Failed to save session", e);
-        setSaveStatus('error');
-        alert("The session data is too large for browser storage. Consider finishing the current design.");
-    }
+    const sessionData = {
+      modelImageUrl,
+      outfitHistory,
+      currentOutfitIndex,
+      currentPoseIndex,
+      activeTarget,
+      tailorNotes,
+    };
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(sessionData));
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 2000);
   }, [modelImageUrl, outfitHistory, currentOutfitIndex, currentPoseIndex, activeTarget, tailorNotes]);
 
   const loadSession = useCallback(() => {
@@ -152,20 +145,116 @@ const App: React.FC = () => {
         setLoadingMessage('');
         setError(null);
         setCurrentPoseIndex(0);
-        setIsSheetCollapsed(false);
+        setIsSheetCollapsed(true);
         setWardrobe(defaultWardrobe);
         setTailorNotes('');
+        setEditingLayerIndex(null);
         localStorage.removeItem(LOCAL_STORAGE_KEY);
     }
   };
 
+  const handleRemoveJacket = useCallback(async () => {
+      if (!displayImageUrl || isLoading) return;
+      
+      setError(null);
+      setIsLoading(true);
+      setLoadingMessage("Removing suit jacket...");
+
+      try {
+          const newImageUrl = await generateJacketRemovalImage(displayImageUrl);
+          const currentPoseInstruction = POSE_INSTRUCTIONS[currentPoseIndex];
+          
+          const newLayer: OutfitLayer = {
+              garment: null,
+              target: 'jacket',
+              action: 'remove_jacket',
+              poseImages: { [currentPoseInstruction]: newImageUrl }
+          };
+
+          setOutfitHistory(prev => {
+              const newHistory = prev.slice(0, currentOutfitIndex + 1);
+              return [...newHistory, newLayer];
+          });
+          setCurrentOutfitIndex(prev => prev + 1);
+          if (isMobile) setIsSheetCollapsed(true);
+      } catch (err) {
+          setError(getFriendlyErrorMessage(err, 'Failed to remove jacket'));
+      } finally {
+          setIsLoading(false);
+          setLoadingMessage('');
+      }
+  }, [displayImageUrl, isLoading, currentPoseIndex, currentOutfitIndex, isMobile]);
+
   const handleGarmentSelect = useCallback(async (garmentSource: File | string, garmentInfo: WardrobeItem) => {
-    if (!displayImageUrl || isLoading) return;
+    if (!displayImageUrl || isLoading || !modelImageUrl) return;
+
+    // Check if we are replacing an existing layer
+    if (editingLayerIndex !== null && editingLayerIndex > 0) {
+      const targetLayer = outfitHistory[editingLayerIndex];
+      if (targetLayer.garment?.id === garmentInfo.id) {
+          setEditingLayerIndex(null);
+          return;
+      }
+
+      setError(null);
+      setIsLoading(true);
+      setLoadingMessage(`Updating ${garmentInfo.category}...`);
+
+      try {
+        const newHistory = [...outfitHistory];
+        const currentPoseInstruction = POSE_INSTRUCTIONS[currentPoseIndex];
+        
+        // 1. Regenerate the target layer using the base image of the previous layer
+        const previousLayerOutput = Object.values(newHistory[editingLayerIndex - 1].poseImages)[0];
+        const updatedTargetImage = await generateVirtualTryOnImage(previousLayerOutput, garmentSource, activeTarget);
+        
+        newHistory[editingLayerIndex] = {
+            ...newHistory[editingLayerIndex],
+            garment: garmentInfo,
+            target: activeTarget,
+            poseImages: { [currentPoseInstruction]: updatedTargetImage }
+        };
+
+        // 2. Cascading regeneration for subsequent layers
+        let cascadeSource = updatedTargetImage;
+        for (let i = editingLayerIndex + 1; i <= currentOutfitIndex; i++) {
+            setLoadingMessage(`Regenerating ${newHistory[i].garment?.name || 'outfit'}...`);
+            const garmentToReapply = newHistory[i].garment;
+            const targetToReapply = newHistory[i].target || 'shirt';
+            if (garmentToReapply) {
+                const regenerated = await generateVirtualTryOnImage(cascadeSource, garmentToReapply.url, targetToReapply);
+                newHistory[i] = {
+                    ...newHistory[i],
+                    poseImages: { [currentPoseInstruction]: regenerated }
+                };
+                cascadeSource = regenerated;
+            } else if (newHistory[i].action === 'remove_jacket') {
+                const regenerated = await generateJacketRemovalImage(cascadeSource);
+                newHistory[i] = {
+                    ...newHistory[i],
+                    poseImages: { [currentPoseInstruction]: regenerated }
+                };
+                cascadeSource = regenerated;
+            }
+        }
+
+        setOutfitHistory(newHistory);
+        setEditingLayerIndex(null);
+        if (isMobile) setIsSheetCollapsed(true);
+      } catch (err) {
+        setError(getFriendlyErrorMessage(err, 'Failed to update garment'));
+      } finally {
+        setIsLoading(false);
+        setLoadingMessage('');
+      }
+      return;
+    }
 
     const nextLayer = outfitHistory[currentOutfitIndex + 1];
     if (nextLayer && nextLayer.garment?.id === garmentInfo.id && nextLayer.target === activeTarget) {
         setCurrentOutfitIndex(prev => prev + 1);
         setCurrentPoseIndex(0);
+        if (isMobile) setIsSheetCollapsed(true);
         return;
     }
 
@@ -195,19 +284,32 @@ const App: React.FC = () => {
         }
         return [...prev, garmentInfo];
       });
+
+      if (isMobile) setIsSheetCollapsed(true);
     } catch (err) {
       setError(getFriendlyErrorMessage(err, 'Failed to apply garment'));
     } finally {
       setIsLoading(false);
       setLoadingMessage('');
     }
-  }, [displayImageUrl, isLoading, currentPoseIndex, outfitHistory, currentOutfitIndex, activeTarget]);
+  }, [displayImageUrl, isLoading, modelImageUrl, currentPoseIndex, outfitHistory, currentOutfitIndex, activeTarget, isMobile, editingLayerIndex]);
 
   const handleRemoveLastGarment = () => {
     if (currentOutfitIndex > 0) {
       setCurrentOutfitIndex(prevIndex => prevIndex - 1);
       setCurrentPoseIndex(0);
+      setEditingLayerIndex(null);
     }
+  };
+
+  const handleEditLayer = (index: number) => {
+    if (index === 0) return; // Cannot "replace" the base model layer
+    setEditingLayerIndex(index);
+    const layer = outfitHistory[index];
+    if (layer.target) {
+        setActiveTarget(layer.target);
+    }
+    if (isMobile) setIsSheetCollapsed(false);
   };
   
   const handlePoseSelect = useCallback(async (newIndex: number) => {
@@ -259,7 +361,7 @@ const App: React.FC = () => {
       <Header onShowHowItWorks={() => setIsHowItWorksOpen(true)} />
       <HowItWorksModal isOpen={isHowItWorksOpen} onClose={() => setIsHowItWorksOpen(false)} />
       
-      <main className="flex-grow flex flex-col">
+      <main className="flex-grow flex flex-col relative overflow-hidden">
         <AnimatePresence mode="wait">
           {!modelImageUrl ? (
             <motion.div
@@ -280,7 +382,7 @@ const App: React.FC = () => {
           ) : (
             <motion.div
               key="main-app"
-              className="relative flex flex-col h-[calc(100vh-4rem)] bg-white overflow-hidden"
+              className="relative flex flex-col flex-grow bg-white overflow-hidden"
               variants={viewVariants}
               initial="initial"
               animate="animate"
@@ -288,7 +390,7 @@ const App: React.FC = () => {
               transition={{ duration: 0.5, ease: 'easeInOut' }}
             >
               <div className="flex-grow relative flex flex-col md:flex-row overflow-hidden">
-                <div className="w-full h-full flex-grow flex items-center justify-center bg-white relative overflow-hidden">
+                <div className="w-full h-full flex-grow flex items-center justify-center bg-[#FDFCFB] relative overflow-hidden">
                   <Canvas 
                     displayImageUrl={displayImageUrl}
                     onStartOver={handleStartOver}
@@ -300,41 +402,68 @@ const App: React.FC = () => {
                     availablePoseKeys={availablePoseKeys}
                   />
                   
-                  {/* Save Floating Action */}
-                  <div className="absolute top-4 right-4 z-40 flex flex-col items-end gap-2">
+                  {/* Floating Action Icons for Mobile */}
+                  <div className="absolute top-4 right-4 z-40 flex flex-col items-end gap-3">
                     <button 
                         onClick={saveSession}
                         disabled={isLoading}
-                        className="flex items-center gap-2 bg-[#1A2D4D] text-white px-5 py-2.5 rounded-full shadow-xl hover:bg-[#2C3E50] transition-all active:scale-95 disabled:opacity-50"
+                        className="flex items-center justify-center bg-[#1A2D4D] text-white w-12 h-12 md:w-auto md:px-5 md:py-2.5 rounded-full shadow-lg hover:bg-[#2C3E50] transition-all active:scale-95 disabled:opacity-50"
+                        title="Save Session"
                     >
-                        {saveStatus === 'success' ? (
-                            <span className="text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                                <SaveIcon className="w-4 h-4" /> Progress Saved
+                        {saveSuccess ? (
+                            <span className="text-[10px] font-bold uppercase tracking-widest hidden md:flex items-center gap-2">
+                              <SaveIcon className="w-4 h-4" /> Progress Saved
                             </span>
                         ) : (
                             <>
-                                <SaveIcon className="w-4 h-4" />
-                                <span className="text-xs font-bold uppercase tracking-widest">Save Session</span>
+                                <SaveIcon className="w-5 h-5 md:w-4 md:h-4" />
+                                <span className="text-xs font-bold uppercase tracking-widest hidden md:inline ml-2">Save Session</span>
                             </>
                         )}
+                        {saveSuccess && isMobile && <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />}
                     </button>
+                    
+                    {isMobile && (
+                      <button 
+                          onClick={() => setIsSheetCollapsed(false)}
+                          className="flex items-center justify-center bg-[#B8A66F] text-white w-12 h-12 rounded-full shadow-lg active:scale-95"
+                          title="Open Wardrobe"
+                      >
+                          <PlusIcon className="w-6 h-6" />
+                      </button>
+                    )}
                   </div>
                 </div>
 
+                {/* Wardrobe Drawer / Sidebar */}
                 <aside 
-                  className={`absolute md:relative md:flex-shrink-0 bottom-0 right-0 h-auto md:h-full w-full md:w-1/3 md:max-w-sm bg-white shadow-2xl md:shadow-none flex flex-col border-t md:border-t-0 md:border-l border-gray-200 transition-transform duration-500 ease-in-out ${isSheetCollapsed ? 'translate-y-[calc(100%-4.5rem)]' : 'translate-y-0'} md:translate-y-0 z-50`}
+                  className={`
+                    absolute md:relative bottom-0 right-0 w-full md:w-1/3 md:max-w-sm bg-white shadow-2xl md:shadow-none 
+                    flex flex-col border-t md:border-t-0 md:border-l border-gray-100 
+                    transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1)
+                    ${isMobile ? (isSheetCollapsed ? 'h-0 opacity-0 translate-y-full' : 'h-[85vh] opacity-100 translate-y-0') : 'h-full'} 
+                    z-50 rounded-t-[2.5rem] md:rounded-none overflow-hidden
+                  `}
                 >
-                    <button 
-                      onClick={() => setIsSheetCollapsed(!isSheetCollapsed)} 
-                      className="md:hidden w-full h-8 flex items-center justify-center bg-gray-50 border-b border-gray-100"
-                    >
-                      {isSheetCollapsed ? <ChevronUpIcon className="w-5 h-5 text-gray-400" /> : <ChevronDownIcon className="w-5 h-5 text-gray-400" />}
-                    </button>
+                    {isMobile && (
+                      <div className="w-full h-8 flex items-center justify-center flex-shrink-0 cursor-pointer" onClick={() => setIsSheetCollapsed(true)}>
+                        <div className="w-12 h-1 bg-gray-200 rounded-full" />
+                      </div>
+                    )}
                     
-                    <div className="p-4 md:p-6 pb-20 overflow-y-auto flex-grow flex flex-col gap-8 custom-scrollbar bg-[#FDFCFB]">
+                    <div className="p-6 pb-24 overflow-y-auto flex-grow flex flex-col gap-8 custom-scrollbar bg-white">
+                      {isMobile && (
+                        <div className="flex items-center justify-between mb-2">
+                          <h2 className="text-3xl font-serif text-[#3D3D3D]">Atelier</h2>
+                          <button onClick={() => setIsSheetCollapsed(true)} className="p-2 text-gray-400">
+                             <ChevronDownIcon className="w-6 h-6" />
+                          </button>
+                        </div>
+                      )}
+
                       {error && (
                         <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-md" role="alert">
-                          <p className="text-sm font-bold">System Alert</p>
+                          <p className="text-sm font-bold uppercase tracking-widest">System Error</p>
                           <p className="text-xs">{error}</p>
                         </div>
                       )}
@@ -342,26 +471,27 @@ const App: React.FC = () => {
                       <OutfitStack 
                         outfitHistory={activeOutfitLayers}
                         onRemoveLastGarment={handleRemoveLastGarment}
+                        onEditLayer={handleEditLayer}
+                        editingLayerIndex={editingLayerIndex}
                       />
 
                       {/* Tailor Notes Section */}
                       <div className="flex flex-col gap-3">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-xl font-serif tracking-wider text-gray-800">Tailor Notes</h2>
+                            <h2 className="text-xl font-serif tracking-wider text-[#3D3D3D]">Tailor Notes</h2>
                             <span className="text-[10px] uppercase tracking-widest text-[#B8A66F] font-bold">Confidential</span>
                         </div>
                         <div className="relative group">
-                            <textarea
-                              value={tailorNotes}
-                              onChange={(e) => setTailorNotes(e.target.value)}
-                              placeholder="fit adjustments, fabric preferences, or client feedback..."
-                              className="w-full min-h-[140px] p-4 text-sm font-sans bg-[#FFFDF9] border border-[#E3DCD1] rounded-xl focus:ring-2 focus:ring-[#B8A66F33] focus:border-[#B8A66F] focus:outline-none placeholder:italic placeholder:text-gray-300 transition-all shadow-inner custom-scrollbar resize-none"
-                            />
-                            <div className="absolute bottom-3 right-3 opacity-20 group-focus-within:opacity-50 transition-opacity">
-                                <ShirtIcon className="w-4 h-4 text-[#B8A66F]" />
-                            </div>
+                          <textarea
+                            value={tailorNotes}
+                            onChange={(e) => setTailorNotes(e.target.value)}
+                            placeholder="Fit adjustments, fabric preferences, or styling advice..."
+                            className="w-full min-h-[120px] p-4 text-sm font-sans bg-[#FFFDF9] border border-[#E3DCD1] rounded-xl focus:ring-2 focus:ring-[#B8A66F33] focus:border-[#B8A66F] focus:outline-none placeholder:italic placeholder:text-gray-300 transition-all shadow-inner custom-scrollbar resize-none"
+                          />
+                          <div className="absolute bottom-3 right-3 opacity-20 group-focus-within:opacity-50 transition-opacity">
+                            <ShirtIcon className="w-4 h-4 text-[#B8A66F]" />
+                          </div>
                         </div>
-                        <p className="text-[10px] text-gray-400 text-center italic">Notes are automatically saved locally.</p>
                       </div>
 
                       <WardrobePanel
@@ -371,23 +501,40 @@ const App: React.FC = () => {
                         wardrobe={wardrobe}
                         activeTarget={activeTarget}
                         onTargetChange={setActiveTarget}
+                        editingLayerIndex={editingLayerIndex}
+                        activeOutfitLayers={activeOutfitLayers}
+                        onRemoveJacket={handleRemoveJacket}
                       />
                     </div>
                 </aside>
+                
+                {/* Backdrop for mobile drawer */}
+                {isMobile && !isSheetCollapsed && (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setIsSheetCollapsed(true)}
+                    className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-40"
+                  />
+                )}
               </div>
 
               <AnimatePresence>
-                {isLoading && isMobile && (
+                {isLoading && (
                   <motion.div
                     className="fixed inset-0 bg-white/95 backdrop-blur-md flex flex-col items-center justify-center z-[100]"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
-                    <Spinner />
+                    <div className="scale-125 md:scale-150">
+                      <Spinner />
+                    </div>
                     {loadingMessage && (
-                      <p className="text-lg font-serif text-gray-700 mt-6 text-center px-8 italic">{loadingMessage}</p>
+                      <p className="text-xl md:text-2xl font-serif text-[#3D3D3D] mt-8 text-center px-8 italic max-w-lg">{loadingMessage}</p>
                     )}
+                    <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.4em] text-[#B8A66F] animate-pulse">Neural Threading in Progress</p>
                   </motion.div>
                 )}
               </AnimatePresence>

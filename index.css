@@ -11,19 +11,11 @@ body {
   font-family: 'Inter', sans-serif;
 }
 
-h1, h2, h3, .font-serif {
+h1, h2, h3, h4, .font-serif {
   font-family: 'Instrument Serif', serif;
 }
 
-.text-gold {
-  color: #B8A66F;
-}
-
-.bg-gold {
-  background-color: #B8A66F;
-}
-
-/* Animation for gentle fade-in of components */
+/* Custom transitions and animations */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -38,10 +30,9 @@ h1, h2, h3, .font-serif {
   animation: fade-in 0.6s ease-out forwards;
 }
 
-/* Animation for the main canvas image to zoom into focus */
 @keyframes zoom-in {
   from {
-    transform: scale(0.95);
+    transform: scale(0.98);
     opacity: 0;
   }
   to {
@@ -50,13 +41,12 @@ h1, h2, h3, .font-serif {
   }
 }
 .animate-zoom-in {
-  animation: zoom-in 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  animation: zoom-in 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
-/* Custom scrollbar for a more integrated look */
+/* Scrollbar Styling */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -80,10 +70,10 @@ h1, h2, h3, .font-serif {
   scrollbar-width: none;
 }
 
-/* Bespoke Tailor Paper Effect */
-.paper-effect {
-  background-color: #FFFDF9;
-  background-image: radial-gradient(#B8A66F11 1px, transparent 0);
-  background-size: 20px 20px;
-  box-shadow: inset 0 0 40px rgba(184, 166, 111, 0.05), 0 2px 10px rgba(0,0,0,0.05);
-}
+/* Brand specific classes */
+.bg-cream { background-color: #F5F2ED; }
+.bg-gold { background-color: #B8A66F; }
+.text-gold { color: #B8A66F; }
+.text-charcoal { color: #3D3D3D; }
+.border-gold { border-color: #B8A66F; }
+.border-cream-dark { border-color: #E3DCD1; }
